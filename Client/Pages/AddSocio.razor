@@ -1,0 +1,60 @@
+﻿@page "/socio/add"
+@using BlazorApp3.Shared
+@inject HttpClient client
+@inject NavigationManager navigationManager
+
+<PageTitle>Agregar Nuevo Socio</PageTitle>
+
+<h3>Agregar Nuevo Socio</h3>
+
+<EditForm Model="@socio" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group">
+        <label for="NombreCompleto">Nombre Completo</label>
+        <InputText id="NombreCompleto" class="form-control" @bind-Value="socio.NombreCompleto" />
+    </div>
+
+    <div class="form-group">
+        <label for="Usuario">Nombre de Usuario</label>
+        <InputText id="Usuario" class="form-control" @bind-Value="socio.Usuario" />
+    </div>
+
+    <div class="form-group">
+        <label for="Clave">Clave</label>
+        <InputText id="Clave" class="form-control" @bind-Value="socio.Clave" />
+    </div>
+
+    <div class="form-group">
+        <label for="Celular">Celular</label>
+        <InputText id="Celular" class="form-control" @bind-Value="socio.Celular" />
+    </div>
+
+    <div class="form-group">
+        <label for="Correoelectronico">Correo Electrónico</label>
+        <InputText id="Correoelectronico" class="form-control" @bind-Value="socio.Correoelectronico" />
+    </div>
+
+    <button type="submit" class="btn btn-primary mt-3">Guardar</button>
+</EditForm>
+
+@code {
+    private Socios socio = new Socios();
+
+    private async Task HandleValidSubmit()
+    {
+        // Lógica para enviar el socio al servidor para guardarlo
+        var response = await client.PostAsJsonAsync("api/socios/addsocio", socio);
+
+        if (response.IsSuccessStatusCode)
+        {
+            navigationManager.NavigateTo("/"); // Redirigir a la página de lista de socios
+        }
+        else
+        {
+            // Manejo de error si no se puede guardar el socio
+            Console.WriteLine("Error al guardar el socio.");
+        }
+    }
+}

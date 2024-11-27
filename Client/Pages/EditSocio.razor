@@ -1,0 +1,108 @@
+﻿@page "/socio/edit/{Id:int}"
+@using BlazorApp3.Shared
+@inject HttpClient client
+@inject NavigationManager nm
+
+<h3>Edit Socio</h3>
+<hr />
+
+<div style="width:60%;">
+    <EditForm Model="socio" OnValidSubmit="Update">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <!-- Nombre Completo -->
+        <div class="row mb-3">
+            <label for="nombreCompleto" class="col-sm-2 col-form-label">Nombre Completo</label>
+            <div class="col-sm-10">
+                <InputText class="form-control" id="nombreCompleto" @bind-Value="socio.NombreCompleto" />
+                <ValidationMessage For="@(() => socio.NombreCompleto)" />
+            </div>
+        </div>
+
+        <!-- Usuario -->
+        <div class="row mb-3">
+            <label for="usuario" class="col-sm-2 col-form-label">Usuario</label>
+            <div class="col-sm-10">
+                <InputText class="form-control" id="usuario" @bind-Value="socio.Usuario" />
+                <ValidationMessage For="@(() => socio.Usuario)" />
+            </div>
+        </div>
+
+        <!-- Clave -->
+        <div class="row mb-3">
+            <label for="clave" class="col-sm-2 col-form-label">Clave</label>
+            <div class="col-sm-10">
+                <InputText class="form-control" id="clave" @bind-Value="socio.Clave" />
+                <ValidationMessage For="@(() => socio.Clave)" />
+            </div>
+        </div>
+
+        <!-- Celular -->
+        <div class="row mb-3">
+            <label for="celular" class="col-sm-2 col-form-label">Celular</label>
+            <div class="col-sm-10">
+                <InputText class="form-control" id="celular" @bind-Value="socio.Celular" />
+                <ValidationMessage For="@(() => socio.Celular)" />
+            </div>
+        </div>
+
+        <!-- Correo Electrónico -->
+        <div class="row mb-3">
+            <label for="correoelectronico" class="col-sm-2 col-form-label">Correo Electrónico</label>
+            <div class="col-sm-10">
+                <InputText class="form-control" id="correoelectronico" @bind-Value="socio.Correoelectronico" />
+                <ValidationMessage For="@(() => socio.Correoelectronico)" />
+            </div>
+        </div>
+
+        <!-- Botones -->
+        <div class="row mb-4">
+            
+
+            <button class="btn btn-primary col-2 m-1" type="submit">
+                Guardar
+            </button>
+        </div>
+    </EditForm>
+</div>
+
+@code {
+    private Socios socio = new Socios();
+    [Parameter] public int Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Id != 0)
+        {
+            // Obtener el socio desde la API para editar
+            socio = await client.GetFromJsonAsync<Socios>($"api/socios/getsocio/{Id}");
+        }
+    }
+
+    private async Task Update()
+    {
+        HttpResponseMessage result;
+
+        if (socio.Id == 0)
+        {
+            // Si el Id es 0, es un nuevo socio
+            result = await client.PostAsJsonAsync("api/socios/addsocio", socio);
+        }
+        else
+        {
+            // Si el Id no es 0, se edita el socio
+            result = await client.PutAsJsonAsync("api/socios/editsocio", socio);
+        }
+
+        if (result.IsSuccessStatusCode)
+        {
+            nm.NavigateTo("/"); // Redirigir a la página principal después de guardar
+        }
+        else
+        {
+            // Manejo de error
+            Console.WriteLine("Error al guardar el socio.");
+        }
+    }
+}

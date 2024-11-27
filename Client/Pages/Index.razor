@@ -1,0 +1,113 @@
+﻿@page "/"
+@using BlazorApp3.Shared
+@inject HttpClient client;
+@inject NavigationManager navigationManager;
+@inject IJSRuntime js
+
+<PageTitle>Inicio</PageTitle>
+
+<h3>Lista de Socios</h3>
+
+<button class="btn btn-primary mt-4" @onclick="OnClickAdd">
+    Nuevo Socio <i class="oi oi-plus m-1"></i>
+</button>
+
+<table class="table mt-4">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Nombre Completo</th>
+            <th>Usuario</th>
+            <th>Email</th>
+            <th>Teléfono</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (socios == null && isLoading)
+        {
+            <tr>
+                <td colspan="6" align="center">Cargando...</td>
+            </tr>
+        }
+        else if (socios == null || socios.Count == 0)
+        {
+            <tr>
+                <td colspan="6" align="center">No se encontraron datos</td>
+            </tr>
+        }
+        else
+        {
+            foreach (var socio in socios)
+            {
+                <tr>
+                    <td>@socio.Id</td>
+                    <td>@socio.NombreCompleto</td>
+                    <td>@socio.Usuario</td>
+                    <td>@socio.Correoelectronico</td>
+                    <td>@socio.Celular</td>
+                    <td>
+                        <a href="@($"/socio/edit/{socio.Id}")" class="btn btn-primary">
+                            Editar <i class="oi oi-pencil m-1"></i>
+                        </a>
+                        <button @onclick="@(() => Delete(socio))" class="btn btn-danger">
+                            Eliminar <i class="oi oi-trash m-1"></i>
+                        </button>
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
+@code {
+    private List<Socios>? socios; // Lista de socios
+    private bool isLoading = false; // Indicador de carga
+
+    // Método que se ejecuta cuando el componente se inicializa
+    protected override async Task OnInitializedAsync()
+    {
+        await GetAllSocios(); // Cargar los socios
+    }
+
+    // Método que obtiene la lista de socios desde el servidor
+    private async Task GetAllSocios()
+    {
+        try
+        {
+            isLoading = true; // Mostrar indicador de carga
+            socios = await client.GetFromJsonAsync<List<Socios>>("api/socios/getsocios");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message); // En caso de error, loguear el error
+        }
+        finally
+        {
+            isLoading = false; // Ocultar indicador de carga
+        }
+    }
+
+    // Método que navega al formulario para agregar un nuevo socio
+    private void OnClickAdd()
+    {
+        navigationManager.NavigateTo("/socio/add"); // Redirigir a la página de agregar socio
+    }
+
+    // Método para eliminar un socio
+    private async void Delete(Socios socio)
+    {
+        // Confirmar eliminación con un cuadro de diálogo
+        bool confirm = await js.InvokeAsync<bool>("confirm", $"¿Está seguro de eliminar al socio {socio.NombreCompleto}?");
+
+        if (confirm) // Si el usuario confirma
+        {
+            // Enviar solicitud de eliminación al servidor
+            var result = await client.DeleteAsync($"api/socios/deletesocio/{socio.Id}");
+
+            // Recargar la lista de socios después de la eliminación
+            await GetAllSocios();
+            StateHasChanged(); // Actualizar la interfaz de usuario
+        }
+    }
+}
